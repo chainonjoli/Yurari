@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サロンOS Yurari</title>
+<meta name="description" content="小さなサロンのための予約・顧客・売上管理。ブラウザだけで動くサロンOS「Yurari」。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#F4F3EC;
+  --surface:#FDFCF8;
+  --surface-2:#EDEBE1;
+  --ink:#2B3230;
+  --ink-soft:#5C6663;
+  --line:#DAD7CA;
+  --accent:#4A7A6F;
+  --accent-deep:#2F5850;
+  --accent-soft:#E3ECE7;
+  --on-accent:#F6FBF9;
+  --ok:#4A7A6F;
+  --warn:#B0813C;
+  --warn-soft:#F3E9D8;
+  --crit:#A94A44;
+  --crit-soft:#F2E1DF;
+  --shadow:0 1px 2px rgba(43,50,48,.06),0 4px 16px rgba(43,50,48,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#171D1B;
+    --surface:#202826;
+    --surface-2:#2A3330;
+    --ink:#E8EBE7;
+    --ink-soft:#9AA8A2;
+    --line:#37423E;
+    --accent:#7FB5A8;
+    --accent-deep:#A5CFC4;
+    --accent-soft:#28403A;
+    --on-accent:#12201C;
+    --ok:#7FB5A8;
+    --warn:#D3A863;
+    --warn-soft:#3B3222;
+    --crit:#D07C74;
+    --crit-soft:#3F2825;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#171D1B;
+  --surface:#202826;
+  --surface-2:#2A3330;
+  --ink:#E8EBE7;
+  --ink-soft:#9AA8A2;
+  --line:#37423E;
+  --accent:#7FB5A8;
+  --accent-deep:#A5CFC4;
+  --accent-soft:#28403A;
+  --on-accent:#12201C;
+  --ok:#7FB5A8;
+  --warn:#D3A863;
+  --warn-soft:#3B3222;
+  --crit:#D07C74;
+  --crit-soft:#3F2825;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  background:var(--ground);
+  color:var(--ink);
+  line-height:1.65;
+  font-size:15px;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{
+  font:inherit;color:var(--ink);
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 10px;
+  width:100%;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+::placeholder{color:var(--ink-soft);opacity:.7}
+
+.app{display:flex;min-height:100dvh}
+
+/* ---- sidebar ---- */
+.side{
+  width:212px;flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--line);
+  padding:20px 14px;
+  display:flex;flex-direction:column;gap:4px;
+  position:sticky;top:0;height:100dvh;
+}
+.brand{padding:4px 10px 18px}
+.brand__name{
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
+  font-size:24px;letter-spacing:.04em;color:var(--accent-deep);
+  line-height:1.2;
+}
+.brand__tag{font-size:11px;color:var(--ink-soft);letter-spacing:.12em}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:9px;
+  color:var(--ink-soft);font-weight:500;text-align:left;
+  transition:background .15s;
+}
+.nav-btn svg{width:18px;height:18px;flex-shrink:0}
+.nav-btn:hover{background:var(--surface-2)}
+.nav-btn[aria-current="page"]{background:var(--accent-soft);color:var(--accent-deep);font-weight:700}
+.side__foot{margin-top:auto;padding:10px 12px;font-size:11px;color:var(--ink-soft)}
+
+/* ---- main ---- */
+.main{flex:1;min-width:0;padding:26px 30px 90px}
+.view{max-width:880px;margin:0 auto}
+.view[hidden]{display:none}
+.view-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-family:"Zen Maru Gothic",sans-serif;font-size:22px;font-weight:700;letter-spacing:.02em;text-wrap:balance}
+.view-head .sub{font-size:13px;color:var(--ink-soft)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 16px;border-radius:9px;font-weight:700;
+  background:var(--accent);color:var(--on-accent);
+  transition:filter .15s;
+}
+.btn:hover{filter:brightness(1.06)}
+.btn--ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn--ghost:hover{background:var(--surface-2);filter:none}
+.btn--danger{background:var(--crit);color:#fff}
+.btn--sm{padding:5px 11px;font-size:13px;border-radius:7px}
+
+/* ---- cards & tiles ---- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.tile{padding:16px 18px}
+.tile__label{font-size:12px;color:var(--ink-soft);letter-spacing:.08em}
+.tile__num{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3}
+.tile__num small{font-size:14px;font-weight:500;color:var(--ink-soft)}
+
+.section-label{
+  font-size:12px;font-weight:700;color:var(--ink-soft);
+  letter-spacing:.14em;text-transform:uppercase;
+  margin:22px 0 10px;
+}
+
+/* ---- reservation rows ---- */
+.rows{display:flex;flex-direction:column}
+.row{
+  display:flex;align-items:center;gap:14px;
+  padding:13px 18px;border-top:1px solid var(--line);
+}
+.rows .row:first-child{border-top:none}
+.row__time{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;width:52px;flex-shrink:0}
+.row__main{flex:1;min-width:0}
+.row__name{font-weight:700}
+.row__meta{font-size:12.5px;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row__price{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-size:13.5px;flex-shrink:0}
+.row--cancel .row__name,.row--cancel .row__time{text-decoration:line-through;color:var(--ink-soft)}
+.chip{
+  flex-shrink:0;font-size:11.5px;font-weight:700;
+  padding:3px 10px;border-radius:999px;letter-spacing:.04em;
+}
+.chip--booked{background:var(--warn-soft);color:var(--warn)}
+.chip--done{background:var(--accent-soft);color:var(--accent-deep)}
+.chip--cancel{background:var(--crit-soft);color:var(--crit)}
+.empty{
+  padding:34px 20px;text-align:center;color:var(--ink-soft);font-size:14px;
+}
+.empty .btn{margin-top:12px}
+
+/* ---- date nav ---- */
+.date-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.date-nav input[type="date"]{width:auto}
+.date-nav__label{font-weight:700;font-family:"Zen Maru Gothic",sans-serif;font-size:16px;margin-right:4px}
+
+/* ---- customer list ---- */
+.search{margin-bottom:14px}
+.person{cursor:pointer}
+.person:hover{background:var(--surface-2)}
+.person__avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:var(--accent-soft);color:var(--accent-deep);
+  display:grid;place-items:center;font-weight:700;
+  font-family:"Zen Maru Gothic",sans-serif;
+}
+.person__visits{font-size:12.5px;color:var(--ink-soft);flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* ---- menu ---- */
+.menu-row{justify-content:space-between}
+.menu-row .row__price{font-size:15px;color:var(--ink);font-weight:700}
+.mins{font-size:12px;color:var(--ink-soft);font-weight:400}
+
+/* ---- sales ---- */
+.bars{display:flex;align-items:flex-end;gap:10px;height:150px;padding:18px 18px 8px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bar{
+  width:100%;max-width:46px;border-radius:6px 6px 2px 2px;
+  background:var(--surface-2);min-height:3px;
+}
+.bar--now{background:var(--accent)}
+.bar-col__label{font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.bar-col__val{font-size:10.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sales-list .row__price{color:var(--ink);font-weight:700}
+
+/* ---- forms & dialog ---- */
+dialog{
+  border:none;border-radius:16px;
+  background:var(--surface);color:var(--ink);
+  box-shadow:0 10px 40px rgba(0,0,0,.25);
+  width:min(440px,calc(100vw - 32px));
+  padding:0;
+}
+dialog::backdrop{background:rgba(20,26,24,.45)}
+.dlg__head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 20px 0;
+}
+.dlg__title{font-family:"Zen Maru Gothic",sans-serif;font-size:17px;font-weight:700}
+.dlg__close{color:var(--ink-soft);font-size:20px;line-height:1;padding:4px 8px;border-radius:6px}
+.dlg__close:hover{background:var(--surface-2)}
+form.dlg__body{padding:14px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:4px}
+.field-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg__actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
+.dlg__actions .btn--danger{margin-right:auto}
+
+/* ---- settings ---- */
+.settings-block{padding:18px 20px;margin-bottom:14px}
+.settings-block h2{font-size:15px;font-family:"Zen Maru Gothic",sans-serif;margin-bottom:6px}
+.settings-block p{font-size:13px;color:var(--ink-soft);margin-bottom:10px}
+.settings-block textarea{font-size:12px;font-family:ui-monospace,monospace;min-height:90px}
+.settings-block .btn{margin-top:10px;margin-right:8px}
+
+.toast{
+  position:fixed;left:50%;bottom:78px;transform:translateX(-50%) translateY(8px);
+  background:var(--ink);color:var(--ground);
+  padding:9px 18px;border-radius:999px;font-size:13.5px;font-weight:500;
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  z-index:60;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---- mobile ---- */
+.tabbar{display:none}
+@media (max-width:720px){
+  .side{display:none}
+  .main{padding:18px 16px 96px}
+  .tabbar{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom));
+  }
+  .tabbar .nav-btn{
+    flex:1;flex-direction:column;gap:2px;align-items:center;
+    font-size:10px;padding:7px 2px;border-radius:8px;
+  }
+  .field-pair{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <nav class="side" aria-label="メイン">
+    <div class="brand">
+      <div class="brand__name">Yurari</div>
+      <div class="brand__tag">サロンOS</div>
+    </div>
+    <button class="nav-btn" data-nav="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>今日</button>
+    <button class="nav-btn" data-nav="resv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>予約</button>
+    <button class="nav-btn" data-nav="cust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>お客さま</button>
+    <button class="nav-btn" data-nav="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>メニュー</button>
+    <button class="nav-btn" data-nav="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>売上</button>
+    <button class="nav-btn" data-nav="conf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>設定</button>
+    <div class="side__foot">データはこの端末のブラウザにのみ保存されます</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- 今日 -->
+    <section class="view" id="view-today">
+      <div class="view-head">
+        <h1 id="today-title">今日</h1>
+        <button class="btn" data-act="new-resv-today">＋ 予約を入れる</button>
+      </div>
+      <div class="tiles">
+        <div class="card tile"><div class="tile__label">本日の予約</div><div class="tile__num" id="t-today-count">0<small> 件</small></div></div>
+        <div class="card tile"><div class="tile__label">今月の売上</div><div class="tile__num" id="t-month-sales">¥0</div></div>
+        <div class="card tile"><div class="tile__label">お客さま</div><div class="tile__num" id="t-cust-count">0<small> 名</small></div></div>
+      </div>
+      <div class="section-label">本日のご予約</div>
+      <div class="card rows" id="today-rows"></div>
+    </section>
+
+    <!-- 予約 -->
+    <section class="view" id="view-resv" hidden>
+      <div class="view-head">
+        <h1>予約</h1>
+        <button class="btn" data-act="new-resv">＋ 予約を入れる</button>
+      </div>
+      <div class="date-nav">
+        <span class="date-nav__label" id="resv-date-label"></span>
+        <button class="btn btn--ghost btn--sm" data-act="day-prev" aria-label="前の日">←</button>
+        <button class="btn btn--ghost btn--sm" data-act="day-today">今日</button>
+        <button class="btn btn--ghost btn--sm" data-act="day-next" aria-label="次の日">→</button>
+        <input type="date" id="resv-date" aria-label="日付を選ぶ">
+      </div>
+      <div class="card rows" id="resv-rows"></div>
+    </section>
+
+    <!-- お客さま -->
+    <section class="view" id="view-cust" hidden>
+      <div class="view-head">
+        <h1>お客さま</h1>
+        <button class="btn" data-act="new-cust">＋ 登録する</button>
+      </div>
+      <div class="search"><input type="search" id="cust-search" placeholder="お名前・ふりがな・電話番号で探す"></div>
+      <div class="card rows" id="cust-rows"></div>
+    </section>
+
+    <!-- メニュー -->
+    <section class="view" id="view-menu" hidden>
+      <div class="view-head">
+        <h1>メニュー</h1>
+        <button class="btn" data-act="new-menu">＋ 追加する</button>
+      </div>
+      <div class="card rows" id="menu-rows"></div>
+    </section>
+
+    <!-- 売上 -->
+    <section class="view" id="view-sales" hidden>
+      <div class="view-head">
+        <h1>売上</h1>
+        <span class="sub">「来店済み」にした予約から集計します</span>
+      </div>
+      <div class="date-nav">
+        <span class="date-nav__label" id="sales-month-label"></span>
+        <button class="btn btn--ghost btn--sm" data-act="month-prev" aria-label="前の月">←</button>
+        <button class="btn btn--ghost btn--sm" data-act="month-now">今月</button>
+        <button class="btn btn--ghost btn--sm" data-act="month-next" aria-label="次の月">→</button>
+      </div>
+      <div class="tiles">
+        <div class="card tile"><div class="tile__label">月間売上</div><div class="tile__num" id="s-total">¥0</div></div>
+        <div class="card tile"><div class="tile__label">来店数</div><div class="tile__num" id="s-count">0<small> 件</small></div></div>
+        <div class="card tile"><div class="tile__label">客単価</div><div class="tile__num" id="s-avg">¥0</div></div>
+      </div>
+      <div class="section-label">月ごとの推移（直近6か月）</div>
+      <div class="card"><div class="bars" id="sales-bars"></div></div>
+      <div class="section-label">メニュー別</div>
+      <div class="card rows sales-list" id="sales-menu-rows"></div>
+    </section>
+
+    <!-- 設定 -->
+    <section class="view" id="view-conf" hidden>
+      <div class="view-head"><h1>設定・データ</h1></div>
+      <div class="card settings-block">
+        <h2>データの書き出し</h2>
+        <p>予約・お客さま・メニューをまとめてJSONで書き出します。控えの保存や他の端末への引っ越しに使えます。</p>
+        <textarea id="export-area" readonly aria-label="書き出したデータ"></textarea>
+        <button class="btn btn--ghost" data-act="do-export">書き出す</button>
+        <button class="btn btn--ghost" data-act="copy-export">コピーする</button>
+      </div>
+      <div class="card settings-block">
+        <h2>データの読み込み</h2>
+        <p>書き出したJSONを貼り付けて読み込みます。<strong>今あるデータは置き換わります。</strong></p>
+        <textarea id="import-area" placeholder="ここにJSONを貼り付け"></textarea>
+        <button class="btn btn--ghost" data-act="do-import">読み込む</button>
+      </div>
+      <div class="card settings-block">
+        <h2>サンプルデータ</h2>
+        <p>操作を試したいときに、例のお客さま・メニュー・予約を入れられます。</p>
+        <button class="btn btn--ghost" data-act="load-sample">サンプルを入れる</button>
+      </div>
+      <div class="card settings-block">
+        <h2>すべて削除</h2>
+        <p>この端末に保存されたYurariのデータをすべて消します。元に戻せません。</p>
+        <button class="btn btn--danger" data-act="wipe">全データを削除する</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar" aria-label="メイン（モバイル）">
+    <button class="nav-btn" data-nav="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>今日</button>
+    <button class="nav-btn" data-nav="resv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>予約</button>
+    <button class="nav-btn" data-nav="cust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>お客さま</button>
+    <button class="nav-btn" data-nav="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>メニュー</button>
+    <button class="nav-btn" data-nav="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>売上</button>
+    <button class="nav-btn" data-nav="conf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>設定</button>
+  </nav>
+</div>
+
+<!-- 予約ダイアログ -->
+<dialog id="dlg-resv">
+  <div class="dlg__head"><span class="dlg__title" id="dlg-resv-title">予約を入れる</span><button class="dlg__close" data-close aria-label="閉じる">×</button></div>
+  <form class="dlg__body" id="form-resv" method="dialog">
+    <div class="field-pair">
+      <div class="field"><label for="f-r-date">日付</label><input type="date" id="f-r-date" required></div>
+      <div class="field"><label for="f-r-time">時間</label><input type="time" id="f-r-time" required step="300"></div>
+    </div>
+    <div class="field"><label for="f-r-cust">お客さま</label><select id="f-r-cust" required></select></div>
+    <div class="field"><label for="f-r-menu">メニュー</label><select id="f-r-menu" required></select></div>
+    <div class="field"><label for="f-r-status">ステータス</label>
+      <select id="f-r-status">
+        <option value="booked">ご予約</option>
+        <option value="done">来店済み</option>
+        <option value="cancel">キャンセル</option>
+      </select>
+    </div>
+    <div class="field"><label for="f-r-memo">メモ</label><textarea id="f-r-memo" rows="2" placeholder="指名・体調・お好みなど"></textarea></div>
+    <div class="dlg__actions">
+      <button type="button" class="btn btn--danger btn--sm" id="resv-delete" hidden>削除</button>
+      <button type="button" class="btn btn--ghost" data-close>やめる</button>
+      <button type="submit" class="btn">保存する</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- お客さまダイアログ -->
+<dialog id="dlg-cust">
+  <div class="dlg__head"><span class="dlg__title" id="dlg-cust-title">お客さまを登録</span><button class="dlg__close" data-close aria-label="閉じる">×</button></div>
+  <form class="dlg__body" id="form-cust" method="dialog">
+    <div class="field-pair">
+      <div class="field"><label for="f-c-name">お名前</label><input id="f-c-name" required placeholder="山田 花子"></div>
+      <div class="field"><label for="f-c-kana">ふりがな</label><input id="f-c-kana" placeholder="やまだ はなこ"></div>
+    </div>
+    <div class="field"><label for="f-c-tel">電話番号</label><input id="f-c-tel" type="tel" inputmode="tel" placeholder="090-0000-0000"></div>
+    <div class="field"><label for="f-c-note">カルテメモ</label><textarea id="f-c-note" rows="3" placeholder="肌質・力加減・アレルギー・会話メモなど"></textarea></div>
+    <div class="dlg__actions">
+      <button type="button" class="btn btn--danger btn--sm" id="cust-delete" hidden>削除</button>
+      <button type="button" class="btn btn--ghost" data-close>やめる</button>
+      <button type="submit" class="btn">保存する</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- メニューダイアログ -->
+<dialog id="dlg-menu">
+  <div class="dlg__head"><span class="dlg__title" id="dlg-menu-title">メニューを追加</span><button class="dlg__close" data-close aria-label="閉じる">×</button></div>
+  <form class="dlg__body" id="form-menu" method="dialog">
+    <div class="field"><label for="f-m-name">メニュー名</label><input id="f-m-name" required placeholder="全身もみほぐし 60分"></div>
+    <div class="field-pair">
+      <div class="field"><label for="f-m-price">料金（円・税込）</label><input id="f-m-price" type="number" inputmode="numeric" min="0" required placeholder="6600"></div>
+      <div class="field"><label for="f-m-min">所要時間（分）</label><input id="f-m-min" type="number" inputmode="numeric" min="0" placeholder="60"></div>
+    </div>
+    <div class="dlg__actions">
+      <button type="button" class="btn btn--danger btn--sm" id="menu-delete" hidden>削除</button>
+      <button type="button" class="btn btn--ghost" data-close>やめる</button>
+      <button type="submit" class="btn">保存する</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+const KEY = "yurari-salon-os-v1";
+const $ = (s, el) => (el || document).querySelector(s);
+const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+
+/* ---------- state ---------- */
+let db = { customers: [], menus: [], resv: [] };
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && Array.isArray(d.customers) && Array.isArray(d.menus) && Array.isArray(d.resv)) db = d;
+    }
+  } catch (e) { /* 保存領域が使えない環境ではメモリ上だけで動く */ }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch (e) { toast("この環境では保存できません（画面を閉じると消えます）"); }
+}
+const uid = () => "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ---------- utils ---------- */
+const pad = n => String(n).padStart(2, "0");
+const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const todayIso = () => iso(new Date());
+const yen = n => "¥" + Number(n || 0).toLocaleString("ja-JP");
+const WD = ["日", "月", "火", "水", "木", "金", "土"];
+function fmtDate(isoStr) {
+  const [y, m, d] = isoStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${m}月${d}日（${WD[dt.getDay()]}）`;
+}
+const custById = id => db.customers.find(c => c.id === id);
+const menuById = id => db.menus.find(m => m.id === id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+/* ---------- navigation ---------- */
+let currentView = "today";
+let resvDate = todayIso();
+let salesMonth = todayIso().slice(0, 7);
+
+function nav(view) {
+  currentView = view;
+  $$(".view").forEach(v => { v.hidden = v.id !== "view-" + view; });
+  $$("[data-nav]").forEach(b => {
+    if (b.dataset.nav === view) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
+  render();
+}
+
+/* ---------- rendering ---------- */
+const STATUS = { booked: ["ご予約", "chip--booked"], done: ["来店済み", "chip--done"], cancel: ["キャンセル", "chip--cancel"] };
+
+function resvRow(r) {
+  const c = custById(r.customerId), m = menuById(r.menuId);
+  const [label, cls] = STATUS[r.status] || STATUS.booked;
+  const meta = [m ? m.name : "（メニュー未設定）", r.memo].filter(Boolean).join(" ・ ");
+  return `<div class="row person ${r.status === "cancel" ? "row--cancel" : ""}" data-open-resv="${r.id}" role="button" tabindex="0">
+    <span class="row__time">${esc(r.time)}</span>
+    <span class="row__main"><span class="row__name">${esc(c ? c.name : "（削除されたお客さま）")}</span><br>
+    <span class="row__meta">${esc(meta)}</span></span>
+    <span class="row__price">${m ? yen(m.price) : ""}</span>
+    <span class="chip ${cls}">${label}</span>
+  </div>`;
+}
+
+function renderRows(el, list, emptyHtml) {
+  el.innerHTML = list.length ? list.join("") : `<div class="empty">${emptyHtml}</div>`;
+}
+
+function renderToday() {
+  const t = todayIso();
+  $("#today-title").textContent = "今日 " + fmtDate(t);
+  const todays = db.resv.filter(r => r.date === t).sort((a, b) => a.time.localeCompare(b.time));
+  $("#t-today-count").innerHTML = todays.filter(r => r.status !== "cancel").length + "<small> 件</small>";
+  const ym = t.slice(0, 7);
+  const monthSales = db.resv.filter(r => r.status === "done" && r.date.startsWith(ym))
+    .reduce((s, r) => s + (menuById(r.menuId)?.price || 0), 0);
+  $("#t-month-sales").textContent = yen(monthSales);
+  $("#t-cust-count").innerHTML = db.customers.length + "<small> 名</small>";
+  renderRows($("#today-rows"), todays.map(resvRow),
+    `本日のご予約はまだありません<br><button class="btn btn--sm" data-act="new-resv-today">＋ 予約を入れる</button>`);
+}
+
+function renderResv() {
+  $("#resv-date-label").textContent = fmtDate(resvDate);
+  $("#resv-date").value = resvDate;
+  const list = db.resv.filter(r => r.date === resvDate).sort((a, b) => a.time.localeCompare(b.time));
+  renderRows($("#resv-rows"), list.map(resvRow), "この日のご予約はありません");
+}
+
+function renderCust() {
+  const q = ($("#cust-search").value || "").trim().toLowerCase();
+  let list = db.customers.slice().sort((a, b) => (a.kana || a.name).localeCompare(b.kana || b.name, "ja"));
+  if (q) list = list.filter(c => [c.name, c.kana, c.phone].some(v => (v || "").toLowerCase().includes(q)));
+  const rows = list.map(c => {
+    const visits = db.resv.filter(r => r.customerId === c.id && r.status === "done").length;
+    const meta = [c.phone, c.note].filter(Boolean).join(" ・ ");
+    return `<div class="row person" data-open-cust="${c.id}" role="button" tabindex="0">
+      <span class="person__avatar" aria-hidden="true">${esc((c.name || "？").slice(0, 1))}</span>
+      <span class="row__main"><span class="row__name">${esc(c.name)}</span><br><span class="row__meta">${esc(meta || "　")}</span></span>
+      <span class="person__visits">来店 ${visits} 回</span>
+    </div>`;
+  });
+  renderRows($("#cust-rows"), rows,
+    q ? "見つかりませんでした" : `まだ登録がありません<br><button class="btn btn--sm" data-act="new-cust">＋ お客さまを登録する</button>`);
+}
+
+function renderMenu() {
+  const rows = db.menus.map(m => `<div class="row person menu-row" data-open-menu="${m.id}" role="button" tabindex="0">
+      <span class="row__main"><span class="row__name">${esc(m.name)}</span> <span class="mins">${m.minutes ? m.minutes + "分" : ""}</span></span>
+      <span class="row__price">${yen(m.price)}</span>
+    </div>`);
+  renderRows($("#menu-rows"), rows,
+    `まだメニューがありません<br><button class="btn btn--sm" data-act="new-menu">＋ メニューを追加する</button>`);
+}
+
+function monthAdd(ym, n) {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1);
+}
+function monthDone(ym) { return db.resv.filter(r => r.status === "done" && r.date.startsWith(ym)); }
+
+function renderSales() {
+  const [y, m] = salesMonth.split("-");
+  $("#sales-month-label").textContent = `${y}年${Number(m)}月`;
+  const done = monthDone(salesMonth);
+  const total = done.reduce((s, r) => s + (menuById(r.menuId)?.price || 0), 0);
+  $("#s-total").textContent = yen(total);
+  $("#s-count").innerHTML = done.length + "<small> 件</small>";
+  $("#s-avg").textContent = done.length ? yen(Math.round(total / done.length)) : "¥0";
+
+  const months = [];
+  for (let i = 5; i >= 0; i--) months.push(monthAdd(salesMonth, -i));
+  const vals = months.map(ym => monthDone(ym).reduce((s, r) => s + (menuById(r.menuId)?.price || 0), 0));
+  const max = Math.max(...vals, 1);
+  $("#sales-bars").innerHTML = months.map((ym, i) => {
+    const h = Math.round(vals[i] / max * 100);
+    return `<div class="bar-col"><span class="bar-col__val">${vals[i] ? yen(vals[i]) : ""}</span>
+      <div class="bar ${ym === salesMonth ? "bar--now" : ""}" style="height:${Math.max(h, 2)}%"></div>
+      <span class="bar-col__label">${Number(ym.split("-")[1])}月</span></div>`;
+  }).join("");
+
+  const byMenu = new Map();
+  done.forEach(r => {
+    const m2 = menuById(r.menuId);
+    const k = m2 ? m2.name : "（削除されたメニュー）";
+    const e = byMenu.get(k) || { n: 0, sum: 0 };
+    e.n++; e.sum += m2 ? m2.price : 0;
+    byMenu.set(k, e);
+  });
+  const rows = [...byMenu.entries()].sort((a, b) => b[1].sum - a[1].sum)
+    .map(([name, e]) => `<div class="row"><span class="row__main"><span class="row__name">${esc(name)}</span><br>
+      <span class="row__meta">${e.n} 件</span></span><span class="row__price">${yen(e.sum)}</span></div>`);
+  renderRows($("#sales-menu-rows"), rows, "この月の来店済みデータはありません");
+}
+
+function render() {
+  ({ today: renderToday, resv: renderResv, cust: renderCust, menu: renderMenu, sales: renderSales, conf: () => {} }[currentView] || renderToday)();
+}
+
+/* ---------- dialogs ---------- */
+let editResvId = null, editCustId = null, editMenuId = null;
+
+function fillResvSelects(selCust, selMenu) {
+  $("#f-r-cust").innerHTML = '<option value="" disabled selected>選んでください</option>' +
+    db.customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  $("#f-r-menu").innerHTML = '<option value="" disabled selected>選んでください</option>' +
+    db.menus.map(m => `<option value="${m.id}">${esc(m.name)}（${yen(m.price)}）</option>`).join("");
+  if (selCust) $("#f-r-cust").value = selCust;
+  if (selMenu) $("#f-r-menu").value = selMenu;
+}
+
+function openResvDlg(id) {
+  if (!db.customers.length || !db.menus.length) {
+    toast("先にお客さまとメニューを登録してください");
+    nav(!db.menus.length ? "menu" : "cust");
+    return;
+  }
+  editResvId = id || null;
+  const r = id ? db.resv.find(x => x.id === id) : null;
+  $("#dlg-resv-title").textContent = r ? "予約を編集" : "予約を入れる";
+  $("#resv-delete").hidden = !r;
+  $("#f-r-date").value = r ? r.date : (currentView === "resv" ? resvDate : todayIso());
+  $("#f-r-time").value = r ? r.time : "10:00";
+  fillResvSelects(r?.customerId, r?.menuId);
+  $("#f-r-status").value = r ? r.status : "booked";
+  $("#f-r-memo").value = r?.memo || "";
+  $("#dlg-resv").showModal();
+}
+
+function openCustDlg(id) {
+  editCustId = id || null;
+  const c = id ? custById(id) : null;
+  $("#dlg-cust-title").textContent = c ? "お客さまを編集" : "お客さまを登録";
+  $("#cust-delete").hidden = !c;
+  $("#f-c-name").value = c?.name || "";
+  $("#f-c-kana").value = c?.kana || "";
+  $("#f-c-tel").value = c?.phone || "";
+  $("#f-c-note").value = c?.note || "";
+  $("#dlg-cust").showModal();
+}
+
+function openMenuDlg(id) {
+  editMenuId = id || null;
+  const m = id ? menuById(id) : null;
+  $("#dlg-menu-title").textContent = m ? "メニューを編集" : "メニューを追加";
+  $("#menu-delete").hidden = !m;
+  $("#f-m-name").value = m?.name || "";
+  $("#f-m-price").value = m?.price ?? "";
+  $("#f-m-min").value = m?.minutes ?? "";
+  $("#dlg-menu").showModal();
+}
+
+/* ---------- form submits ---------- */
+$("#form-resv").addEventListener("submit", () => {
+  const data = {
+    date: $("#f-r-date").value, time: $("#f-r-time").value,
+    customerId: $("#f-r-cust").value, menuId: $("#f-r-menu").value,
+    status: $("#f-r-status").value, memo: $("#f-r-memo").value.trim(),
+  };
+  if (editResvId) Object.assign(db.resv.find(x => x.id === editResvId), data);
+  else db.resv.push({ id: uid(), ...data });
+  save(); render(); toast("予約を保存しました");
+});
+$("#resv-delete").addEventListener("click", () => {
+  if (!confirm("この予約を削除しますか？")) return;
+  db.resv = db.resv.filter(x => x.id !== editResvId);
+  save(); $("#dlg-resv").close(); render(); toast("予約を削除しました");
+});
+
+$("#form-cust").addEventListener("submit", () => {
+  const data = {
+    name: $("#f-c-name").value.trim(), kana: $("#f-c-kana").value.trim(),
+    phone: $("#f-c-tel").value.trim(), note: $("#f-c-note").value.trim(),
+  };
+  if (editCustId) Object.assign(custById(editCustId), data);
+  else db.customers.push({ id: uid(), ...data });
+  save(); render(); toast("お客さまを保存しました");
+});
+$("#cust-delete").addEventListener("click", () => {
+  if (!confirm("このお客さまを削除しますか？（予約履歴は残ります）")) return;
+  db.customers = db.customers.filter(x => x.id !== editCustId);
+  save(); $("#dlg-cust").close(); render(); toast("削除しました");
+});
+
+$("#form-menu").addEventListener("submit", () => {
+  const data = {
+    name: $("#f-m-name").value.trim(),
+    price: Number($("#f-m-price").value) || 0,
+    minutes: Number($("#f-m-min").value) || 0,
+  };
+  if (editMenuId) Object.assign(menuById(editMenuId), data);
+  else db.menus.push({ id: uid(), ...data });
+  save(); render(); toast("メニューを保存しました");
+});
+$("#menu-delete").addEventListener("click", () => {
+  if (!confirm("このメニューを削除しますか？")) return;
+  db.menus = db.menus.filter(x => x.id !== editMenuId);
+  save(); $("#dlg-menu").close(); render(); toast("削除しました");
+});
+
+/* ---------- global clicks ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-nav],[data-act],[data-open-resv],[data-open-cust],[data-open-menu],[data-close]");
+  if (!t) return;
+  if (t.dataset.nav) return nav(t.dataset.nav);
+  if (t.hasAttribute("data-close")) return t.closest("dialog").close();
+  if (t.dataset.openResv) return openResvDlg(t.dataset.openResv);
+  if (t.dataset.openCust) return openCustDlg(t.dataset.openCust);
+  if (t.dataset.openMenu) return openMenuDlg(t.dataset.openMenu);
+  const act = t.dataset.act;
+  if (act === "new-resv" || act === "new-resv-today") openResvDlg(null);
+  else if (act === "new-cust") openCustDlg(null);
+  else if (act === "new-menu") openMenuDlg(null);
+  else if (act === "day-prev" || act === "day-next") {
+    const [y, m, d] = resvDate.split("-").map(Number);
+    resvDate = iso(new Date(y, m - 1, d + (act === "day-next" ? 1 : -1)));
+    render();
+  }
+  else if (act === "day-today") { resvDate = todayIso(); render(); }
+  else if (act === "month-prev") { salesMonth = monthAdd(salesMonth, -1); render(); }
+  else if (act === "month-next") { salesMonth = monthAdd(salesMonth, 1); render(); }
+  else if (act === "month-now") { salesMonth = todayIso().slice(0, 7); render(); }
+  else if (act === "do-export") { $("#export-area").value = JSON.stringify(db, null, 1); toast("書き出しました。コピーして保存してください"); }
+  else if (act === "copy-export") {
+    if (!$("#export-area").value) $("#export-area").value = JSON.stringify(db, null, 1);
+    $("#export-area").select();
+    try { document.execCommand("copy"); toast("コピーしました"); } catch (err) { toast("選択された内容をコピーしてください"); }
+  }
+  else if (act === "do-import") {
+    try {
+      const d = JSON.parse($("#import-area").value);
+      if (!d || !Array.isArray(d.customers) || !Array.isArray(d.menus) || !Array.isArray(d.resv)) throw new Error("shape");
+      if (!confirm("今のデータを置き換えて読み込みますか？")) return;
+      db = d; save(); render(); toast("読み込みました");
+    } catch (err) { toast("読み込めませんでした。書き出したJSONをそのまま貼り付けてください"); }
+  }
+  else if (act === "load-sample") {
+    if (db.customers.length || db.resv.length) {
+      if (!confirm("今のデータにサンプルを追加します。よろしいですか？")) return;
+    }
+    loadSample(); save(); render(); toast("サンプルデータを入れました");
+  }
+  else if (act === "wipe") {
+    if (!confirm("本当にすべてのデータを削除しますか？元に戻せません。")) return;
+    db = { customers: [], menus: [], resv: [] };
+    try { localStorage.removeItem(KEY); } catch (err) {}
+    render(); toast("すべて削除しました");
+  }
+});
+
+/* Enter/Space で行を開けるように */
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const t = e.target.closest("[data-open-resv],[data-open-cust],[data-open-menu]");
+  if (t) { e.preventDefault(); t.click(); }
+});
+
+$("#cust-search").addEventListener("input", renderCust);
+$("#resv-date").addEventListener("change", e => { if (e.target.value) { resvDate = e.target.value; render(); } });
+
+/* ---------- sample data ---------- */
+function loadSample() {
+  const c1 = uid(), c2 = uid(), c3 = uid();
+  const m1 = uid(), m2 = uid(), m3 = uid();
+  db.customers.push(
+    { id: c1, name: "山田 花子", kana: "やまだ はなこ", phone: "090-1111-2222", note: "肩こり強め。力は強めがお好み。" },
+    { id: c2, name: "佐藤 めぐみ", kana: "さとう めぐみ", phone: "080-3333-4444", note: "アロマはラベンダー希望。" },
+    { id: c3, name: "鈴木 大輔", kana: "すずき だいすけ", phone: "070-5555-6666", note: "デスクワークで腰痛あり。" },
+  );
+  db.menus.push(
+    { id: m1, name: "全身もみほぐし 60分", price: 6600, minutes: 60 },
+    { id: m2, name: "アロマトリートメント 90分", price: 11000, minutes: 90 },
+    { id: m3, name: "ヘッド＆ドライヘッドスパ 40分", price: 4950, minutes: 40 },
+  );
+  const t = new Date();
+  const d0 = iso(t);
+  const dPrev = iso(new Date(t.getFullYear(), t.getMonth(), t.getDate() - 7));
+  const dNext = iso(new Date(t.getFullYear(), t.getMonth(), t.getDate() + 1));
+  db.resv.push(
+    { id: uid(), date: dPrev, time: "11:00", customerId: c1, menuId: m1, status: "done", memo: "" },
+    { id: uid(), date: dPrev, time: "14:00", customerId: c2, menuId: m2, status: "done", memo: "初回" },
+    { id: uid(), date: d0, time: "10:30", customerId: c3, menuId: m1, status: "booked", memo: "腰を中心に" },
+    { id: uid(), date: d0, time: "13:00", customerId: c2, menuId: m3, status: "booked", memo: "" },
+    { id: uid(), date: dNext, time: "15:00", customerId: c1, menuId: m2, status: "booked", memo: "" },
+  );
+}
+
+/* ---------- boot ---------- */
+load();
+nav("today");
+</script>
+</body>
+</html>
